@@ -1,0 +1,108 @@
+' import libraries
+Imports System
+Imports System.IO
+Imports System.Text
+Public Class BasicFile
+
+    Private Sub start_scan(sender As Object, e As EventArgs) Handles scanbutton.Click
+        Try
+            ' define root address
+            Dim address As String = addressbar.Text
+            ' define an object where to store the scan output
+            Dim output As List(Of String) = New List(Of String)
+
+            Dim path As String = addressbar.Text & "\log.txt"
+            ' create or overwrite a log file
+            Dim fs As FileStream = File.Create(path)
+            fs.Close()
+            Dim objWriter As New System.IO.StreamWriter(path, True)
+            ' call the file extractor function
+            file_extractor(address, output)
+            ' start the log with the scanning date
+            objWriter.WriteLine(Date.Today.ToString)
+            ' for each item within the output object, append the item within the log
+            For Each item In output
+                outputlist.Items.Add(item)
+                objWriter.WriteLine(item)
+            Next
+
+            objWriter.Close()
+
+        Catch ex As Exception
+            MsgBox(ex.ToString)
+        End Try
+    End Sub
+    Private Function file_extractor(root As String, list As List(Of String))
+        Try
+            ' for each directory within the root look for files and directories
+            ' and add the path to the output object
+            For Each FoundFile As String In My.Computer.FileSystem.GetFiles(root)
+                list.Add(FoundFile)
+            Next
+            For Each FoundDir As String In My.Computer.FileSystem.GetDirectories(root)
+
+                list.Add(FoundDir)
+                For Each foundFile As String In My.Computer.FileSystem.GetFiles(
+          FoundDir)
+
+                    list.Add(foundFile)
+                Next
+                For Each FoundDirDir As String In My.Computer.FileSystem.GetDirectories(FoundDir)
+
+                    list.Add(FoundDirDir)
+                    ' call the subfile_extractor for each subdirectory founded within the main directory
+
+                    subfile_extractor(FoundDirDir, list)
+                Next
+
+            Next
+
+        Catch ex As Exception
+            MsgBox(ex.ToString)
+        End Try
+    End Function
+    Private Function subfile_extractor(root As String, list As List(Of String))
+        Try
+            For Each FoundFile As String In My.Computer.FileSystem.GetFiles(root)
+                list.Add(FoundFile)
+            Next
+            For Each FoundDir As String In My.Computer.FileSystem.GetDirectories(root)
+
+                list.Add(FoundDir)
+                For Each foundFile As String In My.Computer.FileSystem.GetFiles(
+          FoundDir)
+
+                    list.Add(foundFile)
+                Next
+                For Each FoundDirDir As String In My.Computer.FileSystem.GetDirectories(FoundDir)
+
+                    list.Add(FoundDirDir)
+                    file_extractor(FoundDirDir, list)
+
+                Next
+
+            Next
+
+        Catch ex As Exception
+            MsgBox(ex.ToString)
+        End Try
+    End Function
+
+    Private Sub buttonlog_Click(sender As Object, e As EventArgs) Handles buttonlog.Click
+        Try
+            Process.Start(addressbar.Text & "\log.txt")
+        Catch ex As Exception
+            MsgBox(ex.ToString)
+        End Try
+    End Sub
+
+    Private Sub closebutton_Click(sender As Object, e As EventArgs) Handles closebutton.Click
+        Close()
+    End Sub
+
+    Private Sub selectbutton_Click(sender As Object, e As EventArgs) Handles selectbutton.Click
+        If selectwindow.ShowDialog = Windows.Forms.DialogResult.OK Then
+            addressbar.Text = selectwindow.SelectedPath
+        End If
+    End Sub
+End Class
